@@ -342,6 +342,13 @@ class ClassCompiler(
     }
 
     lang.instanceReturn(instName, dataType)
+
+    instSpec match {
+      case pi: ParseInstanceSpec =>
+        lang.attrParseSetter(instName)
+      case _ =>
+    }
+
     lang.instanceFooter
   }
 

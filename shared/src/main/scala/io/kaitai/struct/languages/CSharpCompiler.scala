@@ -157,7 +157,7 @@ class CSharpCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
   }
 
   override def attributeReader(attrName: Identifier, attrType: DataType, isNullable: Boolean): Unit = {
-    out.puts(s"public ${kaitaiType2NativeTypeNullable(attrType, isNullable)} ${publicMemberName(attrName)} { get { return ${privateMemberName(attrName)}; } }")
+    out.puts(s"public ${kaitaiType2NativeTypeNullable(attrType, isNullable)} ${publicMemberName(attrName)} { get { return ${privateMemberName(attrName)}; } set { ${privateMemberName(attrName)} = value; } }")
   }
 
   override def universalDoc(doc: DocSpec): Unit = {
@@ -191,6 +191,16 @@ class CSharpCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
     beProc()
     out.dec
     out.puts("}")
+  }
+
+  override def attrParseSetter(instName: InstanceIdentifier): Unit = {
+    out.dec
+    out.puts("}")
+    out.puts("set")
+    out.puts("{")
+    out.inc
+    out.puts(s"${privateMemberName(instName)} = value;")
+    instanceSetCalculated(instName)
   }
 
   override def attrFixedContentsParse(attrName: Identifier, contents: String): Unit =
