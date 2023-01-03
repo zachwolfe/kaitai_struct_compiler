@@ -326,6 +326,11 @@ class ClassCompiler(
 
     if (!lang.innerDocstrings)
       compileInstanceDoc(instName, instSpec)
+    instSpec match {
+      case vi: ValueInstanceSpec =>
+        lang.ignoreForSerialization
+      case _ =>
+    }
     lang.instanceHeader(className, instName, dataType, instSpec.isNullable)
     if (lang.innerDocstrings)
       compileInstanceDoc(instName, instSpec)
@@ -338,6 +343,7 @@ class ClassCompiler(
         lang.attrParseIfFooter(vi.ifExpr)
         lang.instanceSetCalculated(instName)
       case pi: ParseInstanceSpec =>
+        lang.instanceCheckGeneratedAndReturn
         lang.attrParse(pi, instName, endian)
     }
 

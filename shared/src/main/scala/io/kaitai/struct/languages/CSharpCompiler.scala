@@ -157,7 +157,11 @@ class CSharpCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
   }
 
   override def attributeReader(attrName: Identifier, attrType: DataType, isNullable: Boolean): Unit = {
-    out.puts(s"public ${kaitaiType2NativeTypeNullable(attrType, isNullable)} ${publicMemberName(attrName)} { get { return ${privateMemberName(attrName)}; } set { ${privateMemberName(attrName)} = value; } }")
+    val publicAttrName = publicMemberName(attrName)
+    if (publicAttrName == "M_Root" || publicAttrName == "M_Parent") {
+      ignoreForSerialization
+    }
+    out.puts(s"public ${kaitaiType2NativeTypeNullable(attrType, isNullable)} $publicAttrName { get { return ${privateMemberName(attrName)}; } set { ${privateMemberName(attrName)} = value; } }")
   }
 
   override def universalDoc(doc: DocSpec): Unit = {
@@ -510,6 +514,8 @@ class CSharpCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
     out.puts(s"private ${kaitaiType2NativeTypeNullable(attrType, isNullable)} ${privateMemberName(attrName)};")
   }
 
+  override def ignoreForSerialization: Unit = out.puts("[Newtonsoft.Json.JsonIgnore]")
+
   override def instanceHeader(className: String, instName: InstanceIdentifier, dataType: DataType, isNullable: Boolean): Unit = {
     out.puts(s"public ${kaitaiType2NativeTypeNullable(dataType, isNullable)} ${publicMemberName(instName)}")
     out.puts("{")
@@ -530,6 +536,13 @@ class CSharpCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
     out.puts(s"if (${flagForInstName(instName)})")
     out.inc
     instanceReturn(instName, dataType)
+    out.dec
+  }
+
+  override def instanceCheckGeneratedAndReturn: Unit = {
+    out.puts(s"if (M_Io == null)")
+    out.inc
+    out.puts("return default;")
     out.dec
   }
 
