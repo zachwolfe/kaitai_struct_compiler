@@ -260,7 +260,7 @@ class LuaCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
     out.puts(s"function ${types2class(className)}.property.${publicMemberName(instName)}:get()")
     out.inc
   }
-  override def instanceFooter: Unit = {
+  override def instanceFooter(className: List[String], instName: InstanceIdentifier, dataType: DataType, isNullable: Boolean, shouldAddSetter: Boolean): Unit = {
     out.dec
     out.puts("end")
     out.puts

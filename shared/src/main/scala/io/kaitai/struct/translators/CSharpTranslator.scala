@@ -1,6 +1,6 @@
 package io.kaitai.struct.translators
 
-import io.kaitai.struct.{ImportList, Utils}
+import io.kaitai.struct.{ClassTypeProvider, ImportList, RuntimeConfig, Utils}
 import io.kaitai.struct.datatype.DataType
 import io.kaitai.struct.datatype.DataType._
 import io.kaitai.struct.exprlang.Ast
@@ -8,9 +8,12 @@ import io.kaitai.struct.exprlang.Ast._
 import io.kaitai.struct.format.Identifier
 import io.kaitai.struct.languages.CSharpCompiler
 
-class CSharpTranslator(provider: TypeProvider, importList: ImportList) extends BaseTranslator(provider) {
+class CSharpTranslator(provider: TypeProvider, importList: ImportList, config: RuntimeConfig) extends BaseTranslator(provider) {
   override def doArrayLiteral(t: DataType, value: Seq[expr]): String = {
-    val nativeType = CSharpCompiler.kaitaiType2NativeType(t)
+    // FIXME
+    val compiler = new CSharpCompiler(provider.asInstanceOf[ClassTypeProvider], config)
+
+    val nativeType = compiler.kaitaiType2NativeType(t)
     val commaStr = value.map((v) => translate(v)).mkString(", ")
 
     importList.add("System.Collections.Generic")
@@ -47,6 +50,12 @@ class CSharpTranslator(provider: TypeProvider, importList: ImportList) extends B
     }
   }
 
+  override def doNumericCompareOp(left: expr, op: cmpop, right: expr): String =
+    s"(${super.doNumericCompareOp(left, op, right)})"
+
+  override def doEnumCompareOp(left: expr, op: cmpop, right: expr): String =
+    s"(${super.doEnumCompareOp(left, op, right)})"
+
   override def doName(s: String) =
     if (s.startsWith("_")) {
       s match {
@@ -73,9 +82,9 @@ class CSharpTranslator(provider: TypeProvider, importList: ImportList) extends B
 
   override def doStrCompareOp(left: Ast.expr, op: Ast.cmpop, right: Ast.expr) = {
     if (op == Ast.cmpop.Eq) {
-      s"${translate(left)} == ${translate(right)}"
+      s"(${translate(left)}) == (${translate(right)})"
     } else if (op == Ast.cmpop.NotEq) {
-      s"${translate(left)} != ${translate(right)}"
+      s"(${translate(left)}) != (${translate(right)})"
     } else {
       s"(${translate(left)}.CompareTo(${translate(right)}) ${cmpOp(op)} 0)"
     }
@@ -88,8 +97,11 @@ class CSharpTranslator(provider: TypeProvider, importList: ImportList) extends B
     s"${translate(container)}[${translate(idx)}]"
   override def doIfExp(condition: expr, ifTrue: expr, ifFalse: expr): String =
     s"(${translate(condition)} ? ${translate(ifTrue)} : ${translate(ifFalse)})"
-  override def doCast(value: Ast.expr, typeName: DataType): String =
-    s"((${CSharpCompiler.kaitaiType2NativeType(typeName)}) (${translate(value)}))"
+  override def doCast(value: Ast.expr, typeName: DataType): String = {
+    // FIXME
+    val compiler = new CSharpCompiler(provider.asInstanceOf[ClassTypeProvider], config)
+    s"((${compiler.kaitaiType2NativeType(typeName)}) (${translate(value)}))"
+  }
 
   // Predefined methods of various types
   override def strToInt(s: expr, base: expr): String = {
@@ -106,11 +118,15 @@ class CSharpTranslator(provider: TypeProvider, importList: ImportList) extends B
   }
   override def bytesToStr(bytesExpr: String, encoding: Ast.expr): String =
     s"System.Text.Encoding.GetEncoding(${translate(encoding)}).GetString($bytesExpr)"
-  override def strLength(s: expr): String =
-    s"${translate(s)}.Length"
+  override def bytesIndexOf(b: expr, byte: expr): String =
+    s"Array.IndexOf(${translate(b)}, ${doCast(byte, Int1Type(false))})"
 
+  override def strLength(s: expr): String =
+    s"(${translate(s)}).Length"
   override def strReverse(s: expr): String =
     s"${CSharpCompiler.kstreamName}.StringReverse(${translate(s)})"
+  override def strToBytes(s: expr, encoding: expr): String =
+    s"System.Text.Encoding.GetEncoding(${translate(encoding)}).GetBytes(${translate(s)})"
 
   override def strSubstring(s: expr, from: expr, to: expr): String =
     s"${translate(s)}.Substring(${translate(from)}, ${translate(to)} - ${translate(from)})"

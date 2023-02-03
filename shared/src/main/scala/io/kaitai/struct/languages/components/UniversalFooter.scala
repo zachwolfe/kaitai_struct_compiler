@@ -2,6 +2,8 @@ package io.kaitai.struct.languages.components
 
 import io.kaitai.struct.exprlang.Ast.expr
 import io.kaitai.struct.format.ClassSpec
+import io.kaitai.struct.format._
+import io.kaitai.struct.datatype._
 
 /**
   * All footers in the language look the same and can be written by the same

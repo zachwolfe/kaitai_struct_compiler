@@ -14,7 +14,7 @@ sealed abstract class CompilationProblem extends Jsonable {
   def severity: ProblemSeverity
   def coords: ProblemCoords
   def text: String
-  def message = s"${coords.message}:\n\t${severity.message}: $text\n"
+  def message = s"${coords.message}:\n\t${severity.message}: $text\n    (${getClass()})\n"
   def localizedInFile(fileName: String): CompilationProblem
 
   /**
@@ -138,7 +138,7 @@ object KSYParseError {
 case class ErrorInInput(err: Throwable, path: List[String] = List(), fileName: Option[String] = None)
   extends CompilationProblem {
 
-  override def text = Option(err.getMessage).getOrElse (err.toString)
+  override def text = s"${Option(err.getMessage).getOrElse (err.toString)} ${err.getCause()} ${err.getStackTrace().mkString(" ")}"
   override val coords: ProblemCoords = ProblemCoords(fileName, Some(path))
   override def localizedInFile(fileName: String): CompilationProblem =
     copy(fileName = Some(fileName))

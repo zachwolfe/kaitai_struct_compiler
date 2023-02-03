@@ -426,7 +426,7 @@ class ClassCompiler(
     }
 
     lang.instanceReturn(instName, dataType)
-    lang.instanceFooter
+    lang.instanceFooter(className, instName, dataType, instSpec.isNullable, instSpec.isInstanceOf[ParseInstanceSpec])
 
     if (config.readWrite)
       instSpec match {

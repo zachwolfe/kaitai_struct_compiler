@@ -163,6 +163,7 @@ abstract class LanguageCompiler(
   def instanceToWriteSetter(instName: InstanceIdentifier): Unit = ???
   def instanceHeader(className: List[String], instName: InstanceIdentifier, dataType: DataType, isNullable: Boolean): Unit
   def instanceFooter: Unit
+  def instanceFooter(className: List[String], instName: InstanceIdentifier, dataType: DataType, isNullable: Boolean, shouldAddSetter: Boolean): Unit = instanceFooter
   def instanceCheckCacheAndReturn(instName: InstanceIdentifier, dataType: DataType): Unit
   def instanceReturn(instName: InstanceIdentifier, attrType: DataType): Unit
   def instanceCalculate(instName: Identifier, dataType: DataType, value: Ast.expr)
