@@ -209,6 +209,7 @@ class CSharpCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
     out.puts(s"public void _write${idToSetterStr(instName)}()")
     out.puts("{")
     out.inc
+    instanceClearWriteFlag(instName)
   }
 
   override def checkInstanceHeader(instName: InstanceIdentifier): Unit = {
@@ -216,7 +217,6 @@ class CSharpCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
     out.puts(s"public void _check${idToSetterStr(instName)}()")
     out.puts("{")
     out.inc
-    instanceClearWriteFlag(instName)
   }
 
   override def attributeDeclaration(attrName: Identifier, attrType: DataType, isNullable: Boolean): Unit = {
@@ -694,16 +694,16 @@ class CSharpCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
   }
 
   override def instanceWriteFlagDeclaration(attrName: InstanceIdentifier): Unit = {
-    out.puts(s"private bool _hasWritten_${idToSetterStr(attrName)} = false;")
+    out.puts(s"private bool _shouldWrite_${idToSetterStr(attrName)} = false;")
     out.puts(s"private bool _toWrite${idToSetterStr(attrName)} = true;")
   }
 
   override def instanceSetWriteFlag(instName: InstanceIdentifier): Unit = {
-    out.puts(s"_hasWritten_${idToSetterStr(instName)} = _toWrite${idToSetterStr(instName)};")
+    out.puts(s"_shouldWrite_${idToSetterStr(instName)} = _toWrite${idToSetterStr(instName)};")
   }
 
   override def instanceClearWriteFlag(instName: InstanceIdentifier): Unit = {
-    out.puts(s"_hasWritten_${idToSetterStr(instName)} = false;")
+    out.puts(s"_shouldWrite_${idToSetterStr(instName)} = false;")
   }
 
   override def instanceToWriteSetter(instName: InstanceIdentifier): Unit = {
@@ -749,7 +749,7 @@ class CSharpCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
   }
 
   override def instanceCheckWriteFlagAndWrite(instName: InstanceIdentifier): Unit = {
-    out.puts(s"if (_hasWritten_${idToSetterStr(instName)})")
+    out.puts(s"if (_shouldWrite_${idToSetterStr(instName)})")
     out.inc
     out.puts(s"_write${idToSetterStr(instName)}();")
     out.dec
